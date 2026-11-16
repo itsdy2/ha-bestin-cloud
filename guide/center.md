@@ -1,5 +1,7 @@
 # IPARK 스마트홈 연동 가이드 / IPARK Smart Home Integration Guide
 
+> **이 포크의 클라우드 2.0 신규 등록은 [HA 등록 마법사 안내](cloud.md)를 사용하세요.** 아래 UUID/Colab 절차는 기존 수동 등록 참고용입니다. / For new cloud 2.0 registrations in this fork, use the [in-HA wizard](cloud.md); the UUID/Colab steps below are legacy reference.
+
 이 가이드는 기존 두 가지 방식 (1.0 / 2.0) 의 설정 방법을 안내해요. 단지 중앙 서버를 통해 동작하는 새 'iPark 스마트홈 앱' 옵션은 [iPark 스마트홈 앱 가이드](./iparkapp.md) 를 참고하세요.  
 *This guide covers the two existing methods (v1.0 and v2.0). For the new "iPark Smarthome App" option that talks to the apartment complex's central server, see the [iPark Smarthome App guide](./iparkapp.md).*
 
