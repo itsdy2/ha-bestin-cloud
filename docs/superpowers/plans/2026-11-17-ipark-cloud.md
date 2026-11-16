@@ -34,7 +34,7 @@
 ### Task 3: Distribution
 - [x] Document setup, migration, limitations and release; update fork metadata/version.
 - [x] Run isolated offline tests, compile, translation checks and independent review.
-- [ ] Push reviewed commits, verify GitHub checks, tag and publish release with HACS installation URL.
+- [x] Create the authorized GitHub fork and push reviewed commits. Release/check status is recorded in the repository Actions history and GitHub Releases.
 
 ## Verification record
 
