@@ -38,6 +38,46 @@ class Session:
 
 
 class CloudTests(unittest.IsolatedAsyncioTestCase):
+    async def test_doors_and_open_wire_format(self):
+        session = Session(Response([{"id": 0, "lobby_name": "정문"},
+                                    {"id": "a/b", "lobby_name": "후문"}]), Response({"result": "ok"}))
+        api = cloud.CloudAPI(session)
+        auth = {"url": "https://site.example", "access-token": "secret", "alias": "HA"}
+        self.assertEqual(await api.doors(auth), [{"id": "0", "lobby_name": "정문"},
+                                                {"id": "a/b", "lobby_name": "후문"}])
+        await api.open_door(auth, "a/b")
+        self.assertEqual(session.calls[0][0:2], ("GET", "https://site.example/v2/api/onepass/doors"))
+        self.assertEqual(session.calls[1][0:2], ("POST", "https://site.example/v2/api/onepass/doors/a%2Fb/apply"))
+        self.assertEqual(session.calls[1][2]["json"], {"appname": "스마트홈2.0", "alias": "HA"})
+        self.assertEqual(session.calls[1][2]["headers"]["access-token"], "secret")
+
+    async def test_door_invalid_inputs_and_responses(self):
+        auth = {"url": "https://site.example", "access-token": "t"}
+        for body in ({}, [None], [{"id": True, "lobby_name": "X"}],
+                     [{"id": "", "lobby_name": "X"}], [{"id": "1"}],
+                     [{"id": 1, "lobby_name": "A"}, {"id": "1", "lobby_name": "B"}]):
+            with self.assertRaises(cloud.CloudError):
+                await cloud.CloudAPI(Session(Response(body))).doors(auth)
+        self.assertEqual(await cloud.CloudAPI(Session(Response([]))).doors(auth), [])
+        session = Session()
+        with self.assertRaises(cloud.CloudError):
+            await cloud.CloudAPI(session).open_door(auth, "1")
+        self.assertEqual(session.calls, [])
+        for body in ({}, [], {"result": "fail"}, {"result": "unknown"}):
+            session = Session(Response(body))
+            with self.assertRaises(cloud.CloudError):
+                await cloud.CloudAPI(session).open_door({**auth, "alias": "HA"}, "1")
+            self.assertEqual(len(session.calls), 1)
+        session = Session(asyncio.TimeoutError())
+        with self.assertRaises(cloud.CloudError):
+            await cloud.CloudAPI(session).open_door({**auth, "alias": "HA"}, "1")
+        self.assertEqual(len(session.calls), 1)
+
+    def test_onepass_support(self):
+        self.assertIsNone(cloud.onepass_support({}))
+        self.assertIs(cloud.onepass_support({"additional": []}), False)
+        self.assertIs(cloud.onepass_support({"additional": '[{"category":"onepass"}]'}), True)
+
     async def test_registration_verify_login_wire_format(self):
         session = Session(Response({"transaction": "tx"}), Response({"result": "ok"}),
                           Response({"url": "https://site.example", "access-token": "token"}))

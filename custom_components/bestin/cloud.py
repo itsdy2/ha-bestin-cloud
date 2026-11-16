@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
 import aiohttp
 
@@ -36,7 +36,7 @@ def validate_session(value: object) -> dict:
     return {**value, "url": url.rstrip("/")}
 
 
-def elevator_support(site: object) -> bool | None:
+def elevator_support(site: object, category: str = "elevator") -> bool | None:
     """True/False only for a valid capability list; missing data is unknown."""
     if not isinstance(site, dict):
         return None
@@ -48,7 +48,12 @@ def elevator_support(site: object) -> bool | None:
             return None
     if not isinstance(additional, list) or any(not isinstance(v, dict) for v in additional):
         return None
-    return any(v.get("category") == "elevator" for v in additional)
+    return any(v.get("category") == category for v in additional)
+
+
+def onepass_support(site: object) -> bool | None:
+    """Read the same capability list for lobby access."""
+    return elevator_support(site, "onepass")
 
 
 class CloudAPI:
@@ -118,6 +123,39 @@ class CloudAPI:
         result = await self._request(
             "POST", session["url"] + f"/v2/api/elevator/{direction}",
             {"access-token": session["access-token"]}, data=direction,
+        )
+        if not isinstance(result, dict) or result.get("result") != "ok":
+            raise CloudError("request_failed")
+
+    async def doors(self, session: dict) -> list[dict]:
+        session = validate_session(session)
+        body = await self._request("GET", session["url"] + "/v2/api/onepass/doors",
+                                   {"access-token": session["access-token"]})
+        if not isinstance(body, list):
+            raise CloudError("invalid_response")
+        doors = []
+        seen = set()
+        for row in body:
+            if (not isinstance(row, dict) or type(row.get("id")) not in (str, int)
+                    or not str(row["id"]).strip() or str(row["id"]) in (".", "..")
+                    or not isinstance(row.get("lobby_name"), str) or not row["lobby_name"].strip()):
+                raise CloudError("invalid_response")
+            door_id = str(row["id"])
+            if door_id in seen:
+                raise CloudError("invalid_response")
+            seen.add(door_id)
+            doors.append({"id": door_id, "lobby_name": row["lobby_name"].strip()})
+        return doors
+
+    async def open_door(self, session: dict, door_id: str) -> None:
+        session = validate_session(session)
+        if (not isinstance(door_id, str) or not door_id.strip() or door_id in (".", "..")
+                or not isinstance(session.get("alias"), str) or not session["alias"].strip()):
+            raise CloudError("invalid_response")
+        result = await self._request(
+            "POST", session["url"] + f"/v2/api/onepass/doors/{quote(door_id, safe='')}/apply",
+            {"access-token": session["access-token"]},
+            json={"appname": "스마트홈2.0", "alias": session["alias"]},
         )
         if not isinstance(result, dict) or result.get("result") != "ok":
             raise CloudError("request_failed")

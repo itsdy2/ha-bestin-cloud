@@ -1,5 +1,13 @@
 # Changes
 
+## Unreleased
+
+- Discover cloud 2.0 onepass lobby doors and add one open button per door.
+- Reuse current session tokens and aliases; isolate discovery failures from other devices.
+- Validate door responses, encode door IDs and never retry opening requests automatically.
+- Add Korean/English labels, usage instructions and offline protocol/platform/runtime tests.
+- Live door listing and opening have not been tested; no running HA was modified.
+
 ## 1.5.0 — 2026-11-17
 
 - Register cloud 2.0 devices entirely in HA using wallpad verification.

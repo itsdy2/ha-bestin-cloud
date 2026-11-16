@@ -28,6 +28,44 @@ def extract_method(filename, class_name, method, scope):
 
 
 class RuntimeTests(unittest.IsolatedAsyncioTestCase):
+    async def test_discovery_capabilities_and_failures(self):
+        from test_cloud import Session, Response
+        scope = {"CloudAPI": cloud.CloudAPI, "CloudError": cloud.CloudError,
+                 "CONF_SESSION": "session", "LOGGER": logging.getLogger("test"),
+                 "elevator_support": cloud.elevator_support, "onepass_support": cloud.onepass_support}
+        discover = extract_method("center.py", "CenterAPIv2", "discover_user_elevator", scope)
+        for response, expected in ((Response({"additional": []}), 0),
+                                   (Response({"additional": [{"category": "onepass"}]}), 1),
+                                   (Response({}), 1), (Response({}, 500), 1)):
+            calls = []
+            async def doors():
+                calls.append(True)
+            owner = types.SimpleNamespace(session=Session(response), discover_doors=doors,
+                entry=types.SimpleNamespace(data={"session": {
+                    "url": "https://site.example", "access-token": "t"}}))
+            await discover(owner)
+            self.assertEqual(len(calls), expected)
+
+    async def test_door_discovery_and_latest_session(self):
+        from test_cloud import Session, Response
+        scope = {"CloudAPI": cloud.CloudAPI, "CloudError": cloud.CloudError,
+                 "CONF_SESSION": "session", "LOGGER": logging.getLogger("test")}
+        discover = extract_method("center.py", "CenterAPIv2", "discover_doors", scope)
+        request = extract_method("center.py", "CenterAPIv2", "request_open_door", scope)
+        session = Session(Response([{"id": 1, "lobby_name": "정문"}]), Response({"result": "ok"}))
+        owner = types.SimpleNamespace(session=session, lobby_doors=[], entry=types.SimpleNamespace(
+            data={"session": {"url": "https://site.example", "access-token": "old", "alias": "HA"}}))
+        await discover(owner)
+        self.assertEqual(owner.lobby_doors, [{"id": "1", "lobby_name": "정문"}])
+        owner.entry.data["session"]["access-token"] = "new"
+        await request(owner, "1")
+        self.assertEqual(session.calls[1][2]["headers"]["access-token"], "new")
+        owner.session = Session(Response({}, 404))
+        await discover(owner)
+        self.assertEqual(owner.lobby_doors, [])
+        with self.assertRaises(cloud.CloudError):
+            await request(owner, "other")
+
     async def test_refresh_saves_session_without_mutating_uuid(self):
         updates = []
         class API:

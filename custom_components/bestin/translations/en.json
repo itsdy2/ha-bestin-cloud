@@ -159,6 +159,9 @@
     },
     "entity": {
         "button": {
+            "lobby_door": {
+                "name": "Open lobby door · {door}"
+            },
             "elevator_up": {
                 "name": "Call elevator up"
             },
@@ -168,6 +171,9 @@
         }
     },
     "exceptions": {
+        "cloud_door_failed": {
+            "message": "The lobby door opening result could not be confirmed. The request was not retried. Check the physical door. If this persists, reload the integration and check lobby access and device registration in the official app."
+        },
         "cloud_call_failed": {
             "message": "Could not confirm the elevator call. It was not retried automatically. Check the elevator before retrying; reload the integration if authorization errors persist."
         }

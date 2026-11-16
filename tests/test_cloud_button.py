@@ -16,6 +16,28 @@ ns = load_without_ha("button.py", {"ButtonEntity": object, "CONF_UUID": "uuid", 
 
 
 class ButtonTests(unittest.IsolatedAsyncioTestCase):
+    async def test_doors_exist_even_without_elevator(self):
+        calls = []
+        async def request(door_id):
+            calls.append(door_id)
+            if door_id == "2":
+                raise cloud.CloudError("request_failed")
+        hub = types.SimpleNamespace(api=types.SimpleNamespace(user_elevator_supported=False,
+            lobby_doors=[{"id": "1", "lobby_name": "정문"}, {"id": "2", "lobby_name": "후문"}],
+            request_open_door=request), hub_id="device", available=True)
+        buttons = []
+        await ns["async_setup_entry"](hub, types.SimpleNamespace(data={"uuid": "u"}), buttons.extend)
+        self.assertEqual(len(buttons), 2)
+        self.assertNotEqual(buttons[0]._attr_unique_id, buttons[1]._attr_unique_id)
+        self.assertEqual(buttons[0]._attr_translation_placeholders, {"door": "정문"})
+        await buttons[0].async_press()
+        with self.assertRaises(HAError) as error:
+            await buttons[1].async_press()
+        self.assertEqual(error.exception.kwargs["translation_key"], "cloud_door_failed")
+        self.assertEqual(calls, ["1", "2"])
+        hub.available = False
+        self.assertFalse(buttons[0].available)
+
     async def test_support_unknown_disabled_unsupported_absent(self):
         for support, count, enabled in ((True, 2, True), (None, 2, False), (False, 0, False)):
             hub = types.SimpleNamespace(api=types.SimpleNamespace(user_elevator_supported=support),

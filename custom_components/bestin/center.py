@@ -32,7 +32,7 @@ from homeassistant.const import (
     WIND_SPEED,
 )
 
-from .cloud import CloudAPI, CloudError, elevator_support
+from .cloud import CloudAPI, CloudError, elevator_support, onepass_support
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
@@ -60,6 +60,7 @@ class CenterAPIv2:
     ) -> None:
         """Initialize the CenterAPIv2."""
         self.user_elevator_supported: bool | None = None
+        self.lobby_doors: list[dict] = []
         self.elevator_arrived = False
         self.register_elevator: str | None = entry.data.get(CONF_IP_ADDRESS)
         self.elevator_number: int = entry.data.get("elevator_number", 1)
@@ -108,12 +109,27 @@ class CenterAPIv2:
         self.last_sess_refresh = datetime.now()
 
     async def discover_user_elevator(self):
+        info = None
         try:
             info = await CloudAPI(self.session).site_info(self.entry.data[CONF_SESSION])
             self.user_elevator_supported = elevator_support(info)
         except CloudError:
             self.user_elevator_supported = None
             LOGGER.warning("IPARK elevator capability unavailable; call buttons disabled by default")
+        if onepass_support(info) is not False:
+            await self.discover_doors()
+
+    async def discover_doors(self):
+        self.lobby_doors = []
+        try:
+            self.lobby_doors = await CloudAPI(self.session).doors(self.entry.data[CONF_SESSION])
+        except CloudError:
+            LOGGER.warning("IPARK lobby door list unavailable; reload the integration to retry")
+
+    async def request_open_door(self, door_id):
+        if not any(door["id"] == door_id for door in self.lobby_doors):
+            raise CloudError("invalid_response")
+        await CloudAPI(self.session).open_door(self.entry.data[CONF_SESSION], door_id)
 
     async def request_user_elevator(self, direction):
         await CloudAPI(self.session).call_elevator(self.entry.data[CONF_SESSION], direction)
