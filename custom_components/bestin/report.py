@@ -23,7 +23,7 @@ from datetime import datetime
 from typing import Any, Iterable
 from urllib.parse import quote
 
-ISSUE_NEW_URL = "https://github.com/dlxmax/ha-bestin-fork/issues/new"
+ISSUE_NEW_URL = "https://github.com/itsdy2/ha-bestin-cloud/issues/new"
 # GitHub 는 한도를 공개하지 않습니다. 너무 길면 414 가 납니다. 한글은 글자당
 # 9바이트로 인코딩되므로 넉넉하게 잡습니다.
 # GitHub doesn't publish its limit; too long gives a 414. Korean encodes to

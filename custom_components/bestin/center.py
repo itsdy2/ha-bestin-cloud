@@ -32,6 +32,9 @@ from homeassistant.const import (
     WIND_SPEED,
 )
 
+from .cloud import CloudAPI, CloudError, elevator_support
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+
 from .const import (
     LOGGER,
     BRAND_PREFIX,
@@ -56,6 +59,7 @@ class CenterAPIv2:
         self, hass: HomeAssistant, entry: ConfigEntry
     ) -> None:
         """Initialize the CenterAPIv2."""
+        self.user_elevator_supported: bool | None = None
         self.elevator_arrived = False
         self.register_elevator: str | None = entry.data.get(CONF_IP_ADDRESS)
         self.elevator_number: int = entry.data.get("elevator_number", 1)
@@ -89,34 +93,30 @@ class CenterAPIv2:
     
     async def _v2_refresh_session(self, args=None):
         """Refresh session for v2 API."""
-        url = "https://center.hdc-smart.com/v3/auth/login"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": self.entry.data[CONF_UUID],
-            "User-Agent": "Mozilla/5.0"
-        }
-
         try:
-            async with self.session.post(url=url, headers=headers, timeout=5) as response:
-                resp = await response.json()
-
-                if response.status != 200:
-                    LOGGER.error(f"Login failed: {response.status} {resp}")
-                    return
-                if "err" in resp:
-                    LOGGER.error(f"Session refresh failed: {resp['err']}")
-                    return
-
-                LOGGER.debug(f"Session refreshed: {resp}")
+            session = await CloudAPI(self.session, self.entry.data[CONF_UUID]).login()
+        except CloudError as exc:
+            if str(exc) == "auth_failed":
                 if isinstance(args, datetime):
-                    self.last_sess_refresh = datetime.now()
-                self.hass.config_entries.async_update_entry(
-                    entry=self.entry,
-                    data={**self.entry.data, CONF_SESSION: resp},
-                )
-                await asyncio.sleep(1)
-        except Exception as ex:
-            LOGGER.error(f"Exception during session refresh: {type(ex).__name__}: {ex}")
+                    self.entry.async_start_reauth(self.hass)
+                    return
+                raise ConfigEntryAuthFailed("IPARK device authorization expired") from exc
+            raise ConfigEntryNotReady("IPARK cloud unavailable") from exc
+        self.hass.config_entries.async_update_entry(
+            self.entry, data={**self.entry.data, CONF_SESSION: session},
+        )
+        self.last_sess_refresh = datetime.now()
+
+    async def discover_user_elevator(self):
+        try:
+            info = await CloudAPI(self.session).site_info(self.entry.data[CONF_SESSION])
+            self.user_elevator_supported = elevator_support(info)
+        except CloudError:
+            self.user_elevator_supported = None
+            LOGGER.warning("IPARK elevator capability unavailable; call buttons disabled by default")
+
+    async def request_user_elevator(self, direction):
+        await CloudAPI(self.session).call_elevator(self.entry.data[CONF_SESSION], direction)
 
     async def elevator_call_request(self):
         """Send elevator call request."""
@@ -423,6 +423,8 @@ class BestinCenterAPI(CenterAPIv2):
         device_status = getattr(self, f"_v{version_suffix}_device_status")
     
         await refresh_session()
+        if version_suffix == "2":
+            await self.discover_user_elevator()
         self.hass.create_task(device_status())
 
         self.tasks = [

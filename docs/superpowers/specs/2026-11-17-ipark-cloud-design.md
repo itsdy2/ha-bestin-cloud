@@ -1,0 +1,11 @@
+# IPARK cloud registration and elevator calls
+
+The user requested a usable GitHub fork of dlxmax/ha-bestin-fork implementing the cloud approach proposed in the preceding APK analysis. This document records that requested scope.
+
+Keep the existing bestin domain and cloud 2.0 device controls. Add an in-HA registration wizard: select a complex, enter dong/ho and alias, open mobile registration on the wallpad, request a transaction, enter the wallpad code, verify, log in and save the UUID/session. Retain manual UUID setup for existing users. The wizard must never store the verification code or transaction in the config entry, log authentication payloads, or issue a registration on simply displaying a form. Network errors must be retryable without silently changing UUID.
+
+Add two HA buttons for authenticated user elevator calls (up/down), without requiring a wallpad IP. Use /v2/api/refs/site to discover support when available; unknown capability leaves buttons disabled by default for manual enablement. Explicitly unsupported sites receive no buttons. Keep legacy administrator/SSE switches and sensors only for entries with a wallpad IP. Calls are not retried after ambiguous transport errors because a real call may already have happened. Button failure must be visible to HA.
+
+Approaches: extending existing cloud 2.0 preserves current device entities and HACS compatibility; a new integration domain duplicates existing controls and forces migration. Use the former, as the implementation choice for this request. Do not add legacy PHP account login, onepass unlock, family management, or speculative sensor support. Do not modify the user's running HA or perform real cloud registration/calls in development.
+
+Use the APK-observed central X-API-KEY and UUID auth, raw V2 login body, access-token on the site API. Validate returned session shape and site URLs before using them. Network operations have bounded timeouts and no sensitive response logs. Preserve existing UUID entries and legacy elevator paths. Add unit tests for wire format, errors, registration progression and button invocation. Ship Korean/English instructions and a tagged HACS-compatible release under the authenticated GitHub account. Online household behavior remains unverified until the user registers/tests it.

@@ -41,7 +41,7 @@
                     "uuid": "UUID"
                 },
                 "data_description": {
-                    "ip_address": "If elevator integration is required, please enter the IP address of the wall pad in the household."
+                    "ip_address": "Optional: only for legacy administrator floor/direction sensors. The new call buttons do not need this."
                 },
                 "description": "{report}"
             },
@@ -68,10 +68,40 @@
                     "username": "Username",
                     "password": "Password"
                 }
+            },
+            "cloud_method": {
+                "title": "IPARK Smart Home Cloud 2.0",
+                "menu_options": {
+                    "cloud_register": "Register using the wallpad (recommended)",
+                    "center_v2": "Connect an existing UUID"
+                }
+            },
+            "cloud_register": {
+                "title": "Register a cloud device",
+                "description": "Open Settings → Mobile device registration → Register on your wallpad, then submit to request a code. If a response is lost, check the wallpad before explicitly submitting again. No UUID copy or Colab is needed.",
+                "data": {
+                    "complex": "Apartment complex",
+                    "dong": "Building (dong)",
+                    "ho": "Unit (ho)",
+                    "alias": "Device name (up to 10 characters)"
+                }
+            },
+            "cloud_verify": {
+                "title": "Verify the wallpad code",
+                "description": "Enter the six-digit code shown on your wallpad. For an expired code or an uncertain result, choose Request a new code. A new request is sent only when you submit the registration form again.",
+                "data": {
+                    "password": "Six-digit verification code",
+                    "new_code": "Request a new code (leave code empty)"
+                }
+            },
+            "cloud_finish": {
+                "title": "Retry login after verification",
+                "description": "Wallpad verification succeeded. Submit to retry login only; registration and verification will not be repeated."
             }
         },
         "abort": {
-            "single_instance_allowed": "Only a single configuration is allowed."
+            "single_instance_allowed": "Only a single configuration is allowed.",
+            "reauth_successful": "Device authorization renewed."
         },
         "error": {
             "connect_failed": "Connection failed.",
@@ -79,7 +109,16 @@
             "network_error": "A network error has occurred.",
             "directory_lookup_failed": "Could not look up the site directory.",
             "unknown": "An unknown error has occurred.",
-            "unknown_detail": "Unexpected error: {err}"
+            "unknown_detail": "Unexpected error: {err}",
+            "cloud_auth_failed": "Device authorization was rejected. Check wallpad registration.",
+            "cloud_network_error": "The response could not be confirmed. The request may have completed; check the wallpad before retrying.",
+            "cloud_request_failed": "The server rejected the request. Check the complex, building/unit and verification code.",
+            "cloud_invalid_response": "The server returned an unexpected response.",
+            "cloud_invalid_code": "The verification code must contain six digits.",
+            "cloud_invalid_complex": "Select a complex from the list.",
+            "cloud_invalid_dong": "Enter a building number without leading zeros.",
+            "cloud_invalid_ho": "Enter a unit number using digits and hyphens, without leading zeros.",
+            "cloud_invalid_alias": "Use 1–10 Korean/English letters, digits or supported punctuation, without spaces."
         }
     },
     "options": {
@@ -116,6 +155,21 @@
         },
         "abort": {
             "report_ready": "## 1. ⬇ Download the diagnostics file: {diag}\n## 2. [👉 Open the GitHub issue]({url})\n## 3. Drag the downloaded file into the GitHub issue and submit\n\n**The Close button only closes this window and sends nothing.** Click 1 and 2 first.\n\nYou need a GitHub login. The download link works for 10 minutes. If it fails: Settings > Devices & services > BESTIN > ⋮ (three dots) > Download diagnostics\n\n---\n\nWhat the link contains:\n\n{summary}\n\n---\n\n## 1. ⬇ Download the diagnostics file: {diag}\n## 2. [👉 Open the GitHub issue]({url})\n## 3. Drag the downloaded file into the GitHub issue and submit"
+        }
+    },
+    "entity": {
+        "button": {
+            "elevator_up": {
+                "name": "Call elevator up"
+            },
+            "elevator_down": {
+                "name": "Call elevator down"
+            }
+        }
+    },
+    "exceptions": {
+        "cloud_call_failed": {
+            "message": "Could not confirm the elevator call. It was not retried automatically. Check the elevator before retrying; reload the integration if authorization errors persist."
         }
     }
 }

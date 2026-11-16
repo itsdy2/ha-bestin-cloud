@@ -59,6 +59,7 @@ for _name in (
     "homeassistant.components.climate.const",
     "homeassistant.components.light",
     "homeassistant.config_entries",
+    "homeassistant.exceptions",
     "homeassistant.const",
     "homeassistant.core",
     "homeassistant.helpers",
@@ -82,6 +83,8 @@ class _FakeSession:
 
 
 sys.modules["aiohttp"].ClientSession = _FakeSession
+for _exc in ("ConfigEntryAuthFailed", "ConfigEntryNotReady"):
+    setattr(sys.modules["homeassistant.exceptions"], _exc, type(_exc, (Exception,), {}))
 # @callback must stay identity, otherwise the decorated coroutines vanish.
 sys.modules["homeassistant.core"].callback = lambda func: func
 
@@ -90,6 +93,7 @@ pkg.__path__ = [REPO]
 sys.modules["bst"] = pkg
 for _name in ("bst.const", "bst.controller", "bst.iparkapp", "bst.iparkapp_const", "bst.until"):
     _fake(_name)
+sys.modules["bst.controller"].BestinController = type("BestinController", (), {})
 sys.modules["bst.const"].LOGGER = logging.getLogger("test")
 
 

@@ -41,7 +41,7 @@
                     "uuid": "UUID"
                 },
                 "data_description": {
-                    "ip_address": "엘리베이터 연동이 필요할 때만 세대 월패드 IP 주소를 입력하세요. / Enter the wallpad IP only if you need elevator integration."
+                    "ip_address": "선택 사항: 기존 관리자 API의 층수·방향 센서가 필요할 때만 입력하세요. 새 호출 버튼에는 필요 없습니다."
                 },
                 "description": "{report}"
             },
@@ -68,10 +68,40 @@
                     "username": "사용자 이름 / Username",
                     "password": "비밀번호 / Password"
                 }
+            },
+            "cloud_method": {
+                "title": "IPARK 스마트홈 클라우드 2.0",
+                "menu_options": {
+                    "cloud_register": "월패드 인증으로 새 기기 등록 (권장)",
+                    "center_v2": "기존 UUID로 연결"
+                }
+            },
+            "cloud_register": {
+                "title": "클라우드 기기 등록",
+                "description": "월패드에서 설정 → 모바일 기기 등록 → 등록을 연 뒤 제출하세요. 제출하면 인증번호를 요청합니다. 응답이 유실되면 월패드 화면을 확인한 뒤 직접 다시 제출하세요. 기존 앱 UUID를 복사할 필요는 없습니다.",
+                "data": {
+                    "complex": "단지",
+                    "dong": "동",
+                    "ho": "호",
+                    "alias": "기기 이름 (10자 이내)"
+                }
+            },
+            "cloud_verify": {
+                "title": "월패드 인증번호 입력",
+                "description": "월패드의 6자리 인증번호를 입력하세요. 번호가 만료됐거나 등록 결과가 불확실하면 새 번호 요청을 선택하세요. 다음 등록 화면에서 제출해야 새 요청이 전송됩니다.",
+                "data": {
+                    "password": "6자리 인증번호",
+                    "new_code": "새 번호 요청 (인증번호 입력 불필요)"
+                }
+            },
+            "cloud_finish": {
+                "title": "등록 후 로그인 다시 시도",
+                "description": "월패드 인증은 완료됐습니다. 제출하면 로그인만 다시 시도합니다. 기기를 다시 등록하지 않습니다."
             }
         },
         "abort": {
-            "single_instance_allowed": "하나만 설정할 수 있어요. / Only a single configuration is allowed."
+            "single_instance_allowed": "하나만 설정할 수 있어요. / Only a single configuration is allowed.",
+            "reauth_successful": "기기 인증을 갱신했습니다."
         },
         "error": {
             "connect_failed": "연결하지 못했어요. / Connection failed.",
@@ -79,7 +109,16 @@
             "network_error": "네트워크 오류가 났어요. / A network error has occurred.",
             "directory_lookup_failed": "단지 정보를 찾을 수 없어요. / Could not look up the site directory.",
             "unknown": "알 수 없는 오류가 났어요. / An unknown error has occurred.",
-            "unknown_detail": "예상하지 못한 오류: {err} / Unexpected error: {err}"
+            "unknown_detail": "예상하지 못한 오류: {err} / Unexpected error: {err}",
+            "cloud_auth_failed": "기기 인증이 거부되었습니다. 월패드 등록 상태를 확인하세요.",
+            "cloud_network_error": "응답을 확인하지 못했습니다. 등록/호출이 이미 처리됐을 수 있으니 월패드를 확인한 뒤 다시 시도하세요.",
+            "cloud_request_failed": "서버가 요청을 거부했습니다. 단지, 동·호 또는 인증번호를 확인하세요.",
+            "cloud_invalid_response": "서버 응답 형식이 예상과 다릅니다.",
+            "cloud_invalid_code": "인증번호는 숫자 6자리입니다.",
+            "cloud_invalid_complex": "목록에서 단지를 선택하세요.",
+            "cloud_invalid_dong": "동은 0으로 시작하지 않는 숫자로 입력하세요.",
+            "cloud_invalid_ho": "호는 0으로 시작하지 않는 숫자와 하이픈으로 입력하세요.",
+            "cloud_invalid_alias": "기기 이름은 공백 없이 한글·영문·숫자·허용 특수문자로 1~10자 입력하세요."
         }
     },
     "options": {
@@ -116,6 +155,21 @@
         },
         "abort": {
             "report_ready": "## 1. ⬇ 진단 파일 내려받기 / Download the diagnostics file: {diag}\n## 2. [👉 GitHub 이슈 열기 / Open the GitHub issue]({url})\n## 3. 내려받은 파일을 GitHub 이슈 입력란에 끌어다 놓고 제출 / Drag the downloaded file into the GitHub issue and submit\n\n**'닫기' 는 이 창만 닫고, 아무것도 보내지 않아요.** 1번과 2번을 먼저 눌러 주세요.\n**The Close button only closes this window and sends nothing.** Click 1 and 2 first.\n\nGitHub 로그인이 필요해요. 내려받기 링크는 10분 동안만 돼요. 안 되면: 설정 > 기기 및 서비스 > BESTIN > ⋮ (점 세 개) > 진단 다운로드\nYou need a GitHub login. The download link works for 10 minutes. If it fails: Settings > Devices & services > BESTIN > ⋮ (three dots) > Download diagnostics\n\n---\n\n링크에 담기는 내용 / What the link contains:\n\n{summary}\n\n---\n\n## 1. ⬇ 진단 파일 내려받기 / Download the diagnostics file: {diag}\n## 2. [👉 GitHub 이슈 열기 / Open the GitHub issue]({url})\n## 3. 내려받은 파일을 GitHub 이슈 입력란에 끌어다 놓고 제출 / Drag the downloaded file into the GitHub issue and submit"
+        }
+    },
+    "entity": {
+        "button": {
+            "elevator_up": {
+                "name": "엘리베이터 상향 호출"
+            },
+            "elevator_down": {
+                "name": "엘리베이터 하향 호출"
+            }
+        }
+    },
+    "exceptions": {
+        "cloud_call_failed": {
+            "message": "엘리베이터 호출 결과를 확인하지 못했습니다. 중복 호출을 피하려고 자동 재시도하지 않았습니다. 인증 오류가 계속되면 통합을 다시 불러오세요."
         }
     }
 }

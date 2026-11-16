@@ -21,6 +21,7 @@ REPO = os.path.join(ROOT, "custom_components", "bestin")
 
 
 class _Platform(enum.Enum):
+    BUTTON = "button"
     BINARY_SENSOR = "binary_sensor"
     CLIMATE = "climate"
     FAN = "fan"

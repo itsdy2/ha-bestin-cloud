@@ -23,6 +23,7 @@ REPO = os.path.join(
 
 
 class _Platform(enum.Enum):
+    BUTTON = "button"
     BINARY_SENSOR = "binary_sensor"
     CLIMATE = "climate"
     FAN = "fan"

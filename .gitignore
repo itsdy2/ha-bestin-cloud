@@ -5,3 +5,6 @@ __pycache__/
 .env.*
 secrets.local
 credentials.local
+
+.venv/
+.superpowers/

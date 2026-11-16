@@ -35,6 +35,8 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .cloud import CloudAPI, CloudError
+from .cloud_flow import CloudRegistrationFlow
 from .hub import BestinHub
 from .const import (
     DOMAIN,
@@ -72,13 +74,13 @@ from .iparkapp_const import (
 
 # 번역 문자열에는 URL 을 넣을 수 없어 (hassfest) 자리 표시자로 넘깁니다.
 # hassfest does not allow URLs in translation strings, so they go in as placeholders.
-_GUIDE_BASE = "https://github.com/dlxmax/ha-bestin-fork/blob/main/guide"
+_GUIDE_BASE = "https://github.com/itsdy2/ha-bestin-cloud/blob/main/guide"
 CENTER_GUIDE_URL = f"{_GUIDE_BASE}/center.md"
 DUTY_CYCLE_GUIDE_URL = (
     f"{_GUIDE_BASE}/iparkapp.md#슬로우-듀티-사이클-제어--slow-duty-cycle-control"
 )
 
-class ConfigFlow(ConfigFlow, domain=DOMAIN):
+class ConfigFlow(CloudRegistrationFlow, ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BESTIN."""
 
     VERSION = 1
@@ -222,30 +224,10 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _v2_server_login(self, user_input, session) -> Any:
         """Login to the I'Park Smart Home server (v2) and retrieve session cookies."""
-        url = "https://center.hdc-smart.com/v3/auth/login"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": user_input[CONF_UUID],
-            "User-Agent": "mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/78.0.3904.70 safari/537.36"
-        }
-
         try:
-            async with session.post(url=url, headers=headers, timeout=5) as response:
-                resp = await response.json()
-        
-                if response.status == 200:
-                    LOGGER.info(f"V2 login successful: {resp}")
-                    return resp, None
-                elif response.status == 500:
-                    LOGGER.error(f"V2 login failed (500): {resp["err"]}")
-                    return None, ("login_failed", resp["err"])
-                else:
-                    LOGGER.error(f"V2 login failed. Status: {response.status}")
-                    return None, ("network_error", None)
-        
-        except Exception as ex:
-            LOGGER.error(f"V2 Login exception: {type(ex).__name__}. Details: {ex}")
-            return None, ("unknown_detail", ex)
+            return await CloudAPI(session, user_input[CONF_UUID]).login(), None
+        except CloudError as exc:
+            return None, ("cloud_" + str(exc), None)
 
     async def _login_error_placeholders(
         self, step: str, detail: Any, user_input: dict[str, Any]
@@ -274,7 +256,9 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input[CONF_VERSION] == CONF_VERSION_1:
                 return await self.async_step_center_v1()
             else:
-                return await self.async_step_center_v2()
+                return self.async_show_menu(
+                    step_id="cloud_method", menu_options=["cloud_register", "center_v2"],
+                )
 
         return self.async_show_form(
             step_id="center",

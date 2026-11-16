@@ -7,6 +7,7 @@ import socket
 
 from typing import cast
 
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, Event, callback
@@ -581,6 +582,9 @@ class BestinHub:
                 self.async_add_device_callback,
             )
             await self.api.start()
+        except (ConfigEntryAuthFailed, ConfigEntryNotReady):
+            await self._async_discard_api()
+            raise
         except Exception as ex:
             # 생성자가 이미 세션을 열었으므로 버리기 전에 닫습니다.
             # The constructor already opened a session, so close it before dropping the API.

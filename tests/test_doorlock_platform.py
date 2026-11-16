@@ -21,6 +21,7 @@ REPO = os.path.join(ROOT, "custom_components", "bestin")
 
 
 class _Platform(enum.Enum):
+    BUTTON = "button"
     BINARY_SENSOR = "binary_sensor"
     CLIMATE = "climate"
     FAN = "fan"
@@ -67,6 +68,7 @@ for name in (
     "homeassistant.components.light",
     "homeassistant.config_entries",
     "homeassistant.exceptions",
+    "homeassistant.exceptions",
     "homeassistant.helpers",
     "homeassistant.helpers.aiohttp_client",
     "homeassistant.helpers.device_registry",
@@ -88,6 +90,7 @@ _module(
     CONF_USERNAME="username",
     EVENT_HOMEASSISTANT_STOP="stop",
 )
+_module("homeassistant.exceptions", ConfigEntryAuthFailed=type("AuthFailed", (Exception,), {}), ConfigEntryNotReady=type("NotReady", (Exception,), {}))
 _module("homeassistant.core", callback=lambda f: f, HomeAssistant=object, Event=object)
 
 
