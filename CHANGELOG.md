@@ -1,5 +1,12 @@
 # Changes
 
+## 1.5.1 — 2026-11-19
+
+- Fix the Smart Home 2.0 wallpad registration menu in Home Assistant.
+- Complete registration when the verification response is not a JSON object, after validating the resulting login session.
+- Use the upstream User-Agent for cloud device requests, elevator capability checks, and elevator calls.
+- Verified in one household: wallpad registration, light state retrieval, and a down elevator call without a wallpad IP.
+
 ## 1.5.0 — 2026-11-17
 
 - Register cloud 2.0 devices entirely in HA using wallpad verification.
