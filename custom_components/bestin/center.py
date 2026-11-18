@@ -32,7 +32,7 @@ from homeassistant.const import (
     WIND_SPEED,
 )
 
-from .cloud import CloudAPI, CloudError, elevator_support
+from .cloud import CloudAPI, CloudError, V2_USER_AGENT, elevator_support
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
@@ -258,7 +258,7 @@ class CenterAPIv2:
         url = f"{self.entry.data[CONF_SESSION][CONF_URL]}/v2/api/features/{device_type}/{room_id}/apply"
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": V2_USER_AGENT,
             "access-token": self.entry.data[CONF_SESSION]["access-token"],
         }
         data = {"unit": unit, "state": value}
@@ -287,7 +287,7 @@ class CenterAPIv2:
         url = f"{self.entry.data[CONF_SESSION][CONF_URL]}/v2/api/features/{feature_name}/{room_id}/apply"
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": V2_USER_AGENT,
             "access-token": self.entry.data[CONF_SESSION]["access-token"],
         }
         
@@ -354,7 +354,7 @@ class CenterAPIv2:
         url = f"{self.entry.data[CONF_SESSION][CONF_URL]}/v2/api/features/apply"
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0",
+            "User-Agent": V2_USER_AGENT,
             "access-token": self.entry.data[CONF_SESSION]["access-token"],
         }
         

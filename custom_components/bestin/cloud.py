@@ -8,6 +8,10 @@ from urllib.parse import urlsplit
 import aiohttp
 
 CENTER_URL = "https://center.hdc-smart.com"
+V2_USER_AGENT = (
+    "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36"
+)
 # Public application identifier shipped in the official client, not a household token.
 APP_API_KEY = "ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnpaV055WlhRaU9pSXhNak0wTlRZM09Ea3dJaXdpYm1GdFpTSTZJbk50WVhKMGFHOXRaU0o5Ljk5YjBNYWtXUkNaSzhhVExkOW1XOFlXanR5VnNpd2k5NmNlWjNkYzZzWFk"
 
@@ -97,11 +101,10 @@ class CloudAPI:
         return body["transaction"]
 
     async def verify(self, transaction: str, password: str) -> None:
-        body = await self._central("POST", "/v3/auth/verify", json={
+        # The subsequent login validates whether the device was registered.
+        await self._central("POST", "/v3/auth/verify", json={
             "transaction": transaction, "password": password,
         })
-        if not isinstance(body, dict):
-            raise CloudError("invalid_response")
 
     async def login(self) -> dict:
         return validate_session(await self._central("POST", "/v3/auth/login", data="V2"))
@@ -109,7 +112,7 @@ class CloudAPI:
     async def site_info(self, session: dict):
         session = validate_session(session)
         return await self._request("GET", session["url"] + "/v2/api/refs/site",
-                                   {"access-token": session["access-token"]})
+                                   {"access-token": session["access-token"], "User-Agent": V2_USER_AGENT})
 
     async def call_elevator(self, session: dict, direction: str) -> None:
         if direction not in ("up", "down"):
@@ -117,7 +120,7 @@ class CloudAPI:
         session = validate_session(session)
         result = await self._request(
             "POST", session["url"] + f"/v2/api/elevator/{direction}",
-            {"access-token": session["access-token"]}, data=direction,
+            {"access-token": session["access-token"], "User-Agent": V2_USER_AGENT}, data=direction,
         )
         if not isinstance(result, dict) or result.get("result") != "ok":
             raise CloudError("request_failed")

@@ -255,10 +255,7 @@ class ConfigFlow(CloudRegistrationFlow, ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input[CONF_VERSION] == CONF_VERSION_1:
                 return await self.async_step_center_v1()
-            else:
-                return self.async_show_menu(
-                    step_id="cloud_method", menu_options=["cloud_register", "center_v2"],
-                )
+            return await self.async_step_cloud_method()
 
         return self.async_show_form(
             step_id="center",
@@ -272,6 +269,12 @@ class ConfigFlow(CloudRegistrationFlow, ConfigFlow, domain=DOMAIN):
             }),
             errors=errors,
             description_placeholders={"center_guide_url": CENTER_GUIDE_URL},
+        )
+
+    async def async_step_cloud_method(self) -> ConfigFlowResult:
+        """Offer wallpad registration or an existing device UUID."""
+        return self.async_show_menu(
+            step_id="cloud_method", menu_options=["cloud_register", "center_v2"],
         )
 
     async def async_step_center_v1(

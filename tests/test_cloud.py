@@ -39,7 +39,7 @@ class Session:
 
 class CloudTests(unittest.IsolatedAsyncioTestCase):
     async def test_registration_verify_login_wire_format(self):
-        session = Session(Response({"transaction": "tx"}), Response({"result": "ok"}),
+        session = Session(Response({"transaction": "tx"}), Response(True),
                           Response({"url": "https://site.example", "access-token": "token"}))
         api = cloud.CloudAPI(session, "device")
         self.assertEqual(await api.register("site", "101", "1203", "HA"), "tx")
